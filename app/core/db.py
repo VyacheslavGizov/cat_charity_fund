@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlalchemy import Boolean, Column, Integer, DateTime
+from sqlalchemy import Column, Integer
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declared_attr, declarative_base, sessionmaker
 
@@ -8,6 +6,7 @@ from app.core.config import settings
 
 
 class PreBase:
+
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
@@ -16,18 +15,6 @@ class PreBase:
 
 
 Base = declarative_base(cls=PreBase)
-
-
-# Возможно перенести остюда в пакет/файл с моделями
-class InvestInfoAndDatesAbstractModel(Base):
-    __abstract__ = True
-
-    full_amount = Column(Integer, default=0)
-    invested_amount = Column(Integer, default=0)
-    fully_invested = Column(Boolean, default=False)
-    create_date = Column(DateTime, index=True, default=datetime.now)
-    close_date = Column(DateTime)
-
 
 engine = create_async_engine(settings.database_url)
 

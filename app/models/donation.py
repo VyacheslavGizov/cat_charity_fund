@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Text
 
-from app.core.db import InvestInfoAndDatesAbstractModel
-# может все модели в один файл или все импорты сразу в пакет
+from .abstracts import InvestInfoAndDatesAbstractModel
 
 
 class Donation(InvestInfoAndDatesAbstractModel):

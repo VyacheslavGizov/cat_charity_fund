@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Text
 
+from .abstracts import InvestInfoAndDatesAbstractModel
 from app.core.config import MAX_NAME_LENGTH
-from app.core.db import InvestInfoAndDatesAbstractModel
 
 
 class CharityProject(InvestInfoAndDatesAbstractModel):
