@@ -1,3 +1,6 @@
+from typing import Optional
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -5,7 +8,15 @@ from app.models.charityproject import CharityProject
 
 
 class CRUDCharityProject(CRUDBase):
-    pass
+
+    @staticmethod
+    async def get_id_by_name(
+            name: str,
+            session: AsyncSession
+    ) -> Optional[int]:
+        project = await session.execute(
+            select(CharityProject.id).where(CharityProject.name == name))
+        return project.scalars().first()
 
 
-charity_project_crud = CRUDBase(CharityProject)
+charity_project_crud = CRUDCharityProject(CharityProject)
