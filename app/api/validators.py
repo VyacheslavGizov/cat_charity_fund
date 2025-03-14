@@ -9,7 +9,7 @@ from app.crud.charityproject import charity_project_crud
 NONUNIQUE_PROJECT_NAME = 'Проект с именем \'{name}\' уже существует.'
 
 
-async def check_project_name_duplicate(
+async def check_project_name_duplicate(  # Возможно не понадобится
         name: str,
         session: AsyncSession
 ) -> None:
