@@ -47,6 +47,17 @@ class CRUDBase:
             )
         return object
 
+    async def get_open(
+            self,
+            session: AsyncSession
+    ):
+        objects = await session.execute(
+            select(self.model).where(
+                self.model.fully_invested == False
+            ).order_by(self.model.create_date)
+        )
+        return objects.scalars().all()
+
     async def get_all(
             self,
             session: AsyncSession,

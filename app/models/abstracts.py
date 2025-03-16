@@ -14,6 +14,11 @@ class InvestInfoAndDatesAbstractModel(Base):
     create_date = Column(DateTime, index=True, default=datetime.now)
     close_date = Column(DateTime)
 
+    @property
+    def remainder(self):
+        return self.full_amount - self.invested_amount
+
     def close(self):
+        self.invested_amount = self.full_amount
         self.fully_invested = True
         self.close_date = datetime.now()

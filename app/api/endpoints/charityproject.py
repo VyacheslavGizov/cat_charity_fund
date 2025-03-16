@@ -9,7 +9,9 @@ from app.schemas.charityproject import (
 )
 from app.core.db import get_async_session
 from app.crud.charityproject import charity_project_crud
+from app.crud.donation import donation_crud
 from app.api.validators import check_project_name_duplicate
+from app.services.investment import investment
 
 
 PROJECT_IS_CLOSED = ('{project} - проект закрыт, редактирование '
@@ -35,6 +37,11 @@ async def create_charity_project(
 
     await check_project_name_duplicate(project.name, session)
     project = await charity_project_crud.create(project, session)
+    project = await investment(
+        distributed=project,
+        destinations=await donation_crud.get_open(session),
+        session=session
+    )
     return project
 
 

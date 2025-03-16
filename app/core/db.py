@@ -1,8 +1,12 @@
 from sqlalchemy import Column, Integer
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declared_attr, declarative_base, sessionmaker
+from fastapi.exceptions import HTTPException
 
 from app.core.config import settings
+
+
+UNSUCCESFUL_TRANSACTION = 'Ошибка при выполнении транзакции.'
 
 
 class PreBase:
@@ -23,4 +27,11 @@ AsyncSessionLocal = sessionmaker(engine, AsyncSession)
 
 async def get_async_session():
     async with AsyncSessionLocal() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise HTTPException(
+                500,
+                detail=UNSUCCESFUL_TRANSACTION
+            )
