@@ -12,10 +12,12 @@ from app.crud.charityproject import charity_project_crud
 from app.api.validators import check_project_name_duplicate
 
 
-PROJECT_IS_CLOSED = ('Проект \'{project_name}\' закрыт, '
-                     'редактирование недоступно!')
+PROJECT_IS_CLOSED = ('{project} - проект закрыт, редактирование '
+                     'недоступно!')
 WRONG_FULL_AMOUNT = ('Нельзя установить значение full_amount меньше уже '
                      'вложенной суммы: {invested}.')
+PROJECT_IS_INVESTED_ERROR = ('{project} - были внесены средства, '
+                             'не подлежит удалению!')
 
 router = APIRouter()
 
@@ -71,7 +73,7 @@ async def update_project(
     if project.fully_invested:
         raise HTTPException(
             400,  # Точно ли такой код
-            detail=PROJECT_IS_CLOSED.format(project_name=str(project))
+            detail=PROJECT_IS_CLOSED.format(project=project)
         )
     # Требуемая сумма не меньше вложенной
     update_data = project_data.dict(exclude_unset=True)
@@ -82,5 +84,33 @@ async def update_project(
             400,
             detail=WRONG_FULL_AMOUNT.format(invested=invested_ammount)
         )
+    # Что если админ изменит требуемую сумму на уже инвестированную, тогда проект должен стать закрытым
+    if new_full_amount == invested_ammount:
+        update_data['fully_invested'] = True
     project = await charity_project_crud.update(project, update_data, session)
+    return project
+
+
+@router.delete(
+    '/{project_id}',
+    response_model=CharityProjecDB,
+    response_model_exclude_none=True
+)
+async def delete(
+    project_id: int,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """
+    Удаляет проект. Нельзя удалить проект, в который уже были инвестированы
+    средства, его можно только закрыть.
+    """
+
+    project = await charity_project_crud.get_or_404(project_id, session)
+    if project.invested_amount > 0:
+        raise HTTPException(
+            400,
+            detail=PROJECT_IS_INVESTED_ERROR.format(
+                project=project)
+        )
+    project = await charity_project_crud.delete(project, session)
     return project

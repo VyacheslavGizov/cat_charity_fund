@@ -9,4 +9,5 @@ class CharityProject(InvestInfoAndDatesAbstractModel):
     description = Column(Text, nullable=False)
 
     def __str__(self):
-        return self.name
+        return (f'{self.name}: собрано {self.invested_amount} '
+                f'из {self.full_amount}')

@@ -60,13 +60,22 @@ class CRUDBase:
             update_data,
             session: AsyncSession,
     ):
-        object_data = jsonable_encoder(db_object)
+        object_data = jsonable_encoder(db_object)  # Может перенести в метод объекта .to_dict()
         for field in update_data:
             if field in object_data:
                 setattr(db_object, field, update_data[field])
         session.add(db_object)
         await session.commit()  # Здесь нужно ловить исключение и делать rollback
         await session.refresh(db_object)
+        return db_object
+
+    async def delete(
+            self,
+            db_object,
+            session: AsyncSession
+    ):
+        await session.delete(db_object)
+        await session.commit()  # Здесь нужно ловить исключение и делать rollback
         return db_object
 
     # async def get_by_attr(
