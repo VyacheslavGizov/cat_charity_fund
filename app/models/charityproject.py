@@ -7,3 +7,6 @@ from app.core.config import MAX_NAME_LENGTH
 class CharityProject(InvestInfoAndDatesAbstractModel):
     name = Column(String(MAX_NAME_LENGTH), unique=True, nullable=False)
     description = Column(Text, nullable=False)
+
+    def __str__(self):
+        return self.name

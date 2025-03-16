@@ -1,6 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import HTTPException
+
+
+NOT_FOUND_MESSAGE = '\'{object_name}\' c id={object_id} не найден!'
 
 
 class CRUDBase:
@@ -18,7 +22,7 @@ class CRUDBase:
         await session.refresh(db_object)
         return db_object
 
-    async def get(
+    async def get(  # Возможно не нужно
             self,
             object_id: int,
             session: AsyncSession,
@@ -26,6 +30,22 @@ class CRUDBase:
         objects = await session.execute(
             select(self.model).where(self.model.id == object_id))  # Есть более короткий вариант запроса
         return objects.scalars().first()
+
+    async def get_or_404(
+            self,
+            object_id: int,
+            session: AsyncSession
+    ):
+        object = await self.get(object_id, session)
+        if object is None:
+            raise HTTPException(
+                404,
+                detail=NOT_FOUND_MESSAGE.format(
+                    object_name=self.model.__name__,
+                    object_id=object_id
+                )
+            )
+        return object
 
     async def get_all(
             self,
@@ -37,11 +57,10 @@ class CRUDBase:
     async def update(
             self,
             db_object,
-            object_in,
+            update_data,
             session: AsyncSession,
     ):
         object_data = jsonable_encoder(db_object)
-        update_data = object_in.dict(exclude_unset=True)
         for field in update_data:
             if field in object_data:
                 setattr(db_object, field, update_data[field])
