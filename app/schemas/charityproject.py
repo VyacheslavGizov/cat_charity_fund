@@ -1,13 +1,16 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Extra, Field, PositiveInt
+from pydantic import BaseModel, Extra, Field, PositiveInt, validator
 
 from app.core.config import (
     MAX_NAME_LENGTH,
     MIN_DESCRIPTION_LENGTH,
     MIN_NAME_LENGTH,
 )
+
+
+EMPTY_PROJECT_NAME = 'Имя проекта не может быть пустым!'
 
 
 # Возможжно будет что-то общее для двух схем
@@ -29,8 +32,12 @@ class CharityProjectCreate(CharityProjectBase):
 
 
 class CharityProjectUpdate(CharityProjectBase):
-    pass
-    #  Может валидатор на то, что name not is None
+
+    @validator('name')
+    def name_cannot_be_empty(cls, value):
+        if value is None:
+            raise ValueError(EMPTY_PROJECT_NAME)
+        return value
 
 
 class CharityProjecDB(CharityProjectCreate):

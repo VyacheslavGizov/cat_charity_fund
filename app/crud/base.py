@@ -60,7 +60,7 @@ class CRUDBase:
             update_data,
             session: AsyncSession,
     ):
-        object_data = jsonable_encoder(db_object)  # Может перенести в метод объекта .to_dict()
+        object_data = jsonable_encoder(db_object)
         for field in update_data:
             if field in object_data:
                 setattr(db_object, field, update_data[field])
