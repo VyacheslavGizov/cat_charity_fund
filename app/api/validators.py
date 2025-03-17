@@ -1,5 +1,3 @@
-from http import HTTPStatus
-
 from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +14,6 @@ async def check_project_name_duplicate(  # Возможно не понадоб�
     project_id = await charity_project_crud.get_id_by_name(name, session)
     if project_id is not None:
         raise HTTPException(
-            status_code=400,
+            status_code=400,  # Задать статус код из библиотеки fastapi
             detail=NONUNIQUE_PROJECT_NAME.format(name=name)
         )

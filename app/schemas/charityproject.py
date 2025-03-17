@@ -43,7 +43,7 @@ class CharityProjectUpdate(CharityProjectBase):
 class CharityProjecDB(CharityProjectCreate):
     id: int
     invested_amount: int
-    fully_invested: bool = False
+    fully_invested: bool
     create_date: datetime
     close_date: Optional[datetime]
 
