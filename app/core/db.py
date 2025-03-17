@@ -21,21 +21,18 @@ class PreBase:
 
 Base = declarative_base(cls=PreBase)
 
-engine = create_async_engine(settings.database_url, echo=True)  # отключить эхо
+engine = create_async_engine(settings.database_url)
 
 AsyncSessionLocal = sessionmaker(engine, AsyncSession)
 
 
 async def get_async_session():
     async with AsyncSessionLocal() as session:
-        yield session
-# async def get_async_session():
-#     async with AsyncSessionLocal() as session:
-#         try:
-#             yield session
-#         except SQLAlchemyError:
-#             await session.rollback()
-#             raise HTTPException(
-#                 500,
-#                 detail=UNSUCCESFUL_TRANSACTION
-#             )
+        try:
+            yield session
+        except SQLAlchemyError:
+            await session.rollback()
+            raise HTTPException(
+                500,
+                detail=UNSUCCESFUL_TRANSACTION
+            )

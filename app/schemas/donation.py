@@ -25,6 +25,7 @@ class DonationForUserDB(DonationCreate):
 
 
 class DonationForAdminDB(DonationForUserDB):
+    user_id: int
     invested_amount: int
     fully_invested: bool = False
     close_date: Optional[datetime]

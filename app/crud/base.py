@@ -1,7 +1,11 @@
+from typing import Optional
+
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import User
 
 
 NOT_FOUND_MESSAGE = '\'{object_name}\' c id={object_id} не найден!'
@@ -25,8 +29,12 @@ class CRUDBase:
             self,
             object_in,
             session: AsyncSession,  # Нужны ли здесь аннотации?
+            user: Optional[User] = None
     ):
-        db_object = await self.save(self.model(**object_in.dict()), session)
+        object_in_data = object_in.dict()
+        if user is not None:
+            object_in_data['user_id'] = user.id
+        db_object = await self.save(self.model(**object_in_data), session)
         return db_object
 
     async def get(  # Возможно не нужно
@@ -60,7 +68,7 @@ class CRUDBase:
     ):
         objects = await session.execute(
             select(self.model).where(
-                self.model.fully_invested == False
+                self.model.fully_invested == False  # попробовать с is
             ).order_by(self.model.create_date)
         )
         return objects.scalars().all()

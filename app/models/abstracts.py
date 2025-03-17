@@ -11,7 +11,7 @@ class InvestInfoAndDatesAbstractModel(Base):
     full_amount = Column(Integer, default=0)
     invested_amount = Column(Integer, default=0)
     fully_invested = Column(Boolean, default=False)
-    create_date = Column(DateTime, index=True, default=datetime.now)
+    create_date = Column(DateTime, default=datetime.now)
     close_date = Column(DateTime)
 
     @property

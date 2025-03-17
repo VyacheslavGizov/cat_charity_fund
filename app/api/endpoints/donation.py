@@ -7,6 +7,8 @@ from app.crud.charityproject import charity_project_crud
 from app.schemas.donation import (
     DonationCreate, DonationForAdminDB, DonationForUserDB,)
 from app.services.investment import donations_distribution
+from app.models import User
+from app.core.user import current_user, current_superuser
 
 
 router = APIRouter()
@@ -19,11 +21,12 @@ router = APIRouter()
 )
 async def create_donation(
         donation: DonationCreate,
-        session: AsyncSession = Depends(get_async_session)
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(current_user),
 ):
     """Сделать пожертвование."""
 
-    donation = await donation_crud.create(donation, session)
+    donation = await donation_crud.create(donation, session, user)
     donation = await donations_distribution(
         distributed=donation,
         destinations=await charity_project_crud.get_opens(session),
@@ -36,11 +39,12 @@ async def create_donation(
     '/',
     response_model=list[DonationForAdminDB],
     response_model_exclude_none=True,
+    dependencies=[Depends(current_superuser)]
 )
 async def get_all_donations(
         session: AsyncSession = Depends(get_async_session),
 ):
-    """Возвращает список всех пожертвований."""
+    """Возвращает список всех пожертвований. Только для суперюзеров."""
 
     donations = await donation_crud.get_all(session)
     return donations
@@ -50,13 +54,13 @@ async def get_all_donations(
     '/my',
     response_model=list[DonationForUserDB],
     response_model_exclude_none=True,
+    response_model_exclude={'user_id'},
 )
 async def get_user_donations(
         session: AsyncSession = Depends(get_async_session),
-        # user
+        user: User = Depends(current_user),
 ):
     """Вернуть список пожертвований пользователя, выполняющего запрос."""
 
-    # Здесь будет метод, фильтующий по пользователю
-    donations = await donation_crud.get_all(session)
+    donations = await donation_crud.get_by_user(user, session)
     return donations

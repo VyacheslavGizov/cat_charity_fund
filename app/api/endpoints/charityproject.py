@@ -12,7 +12,7 @@ from app.crud.charityproject import charity_project_crud
 from app.crud.donation import donation_crud
 from app.api.validators import check_project_name_duplicate
 from app.services.investment import donations_distribution
-from app.models.charityproject import CharityProject
+from app.core.user import current_superuser
 
 
 PROJECT_IS_CLOSED = ('{project} - проект закрыт, редактирование '
@@ -29,6 +29,7 @@ router = APIRouter()
     '/',
     response_model=CharityProjecDB,
     response_model_exclude_none=True,
+    dependencies=[Depends(current_superuser)],
 )
 async def create_charity_project(
         project: CharityProjectCreate,
@@ -63,7 +64,8 @@ async def get_charity_projects(
 @router.patch(
     '/{project_id}',
     response_model=CharityProjecDB,
-    response_model_exclude_none=True
+    response_model_exclude_none=True,
+    dependencies=[Depends(current_superuser)],
 )
 async def update_project(
         project_id: int,
@@ -83,6 +85,9 @@ async def update_project(
         )
     update_data = project_data.dict(exclude_unset=True)
     new_full_amount = update_data.get('full_amount', None)
+    new_name = update_data.get('name', None)
+    if new_name is not None:
+        await check_project_name_duplicate(new_name, session)
     if new_full_amount is None:
         project = await charity_project_crud.update(
             project, update_data, session)
@@ -102,7 +107,8 @@ async def update_project(
 @router.delete(
     '/{project_id}',
     response_model=CharityProjecDB,
-    response_model_exclude_none=True
+    response_model_exclude_none=True,
+    dependencies=[Depends(current_superuser)],
 )
 async def delete(
         project_id: int,
