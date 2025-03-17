@@ -6,7 +6,7 @@ from app.crud.donation import donation_crud
 from app.crud.charityproject import charity_project_crud
 from app.schemas.donation import (
     DonationCreate, DonationForAdminDB, DonationForUserDB,)
-from app.services.investment import investment
+from app.services.investment import donations_distribution
 
 
 router = APIRouter()
@@ -24,9 +24,9 @@ async def create_donation(
     """Сделать пожертвование."""
 
     donation = await donation_crud.create(donation, session)
-    donation = await investment(
+    donation = await donations_distribution(
         distributed=donation,
-        destinations=await charity_project_crud.get_open(session),
+        destinations=await charity_project_crud.get_opens(session),
         session=session,
     )
     return donation

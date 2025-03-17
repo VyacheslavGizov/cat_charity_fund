@@ -1,7 +1,8 @@
+from fastapi.exceptions import HTTPException
 from sqlalchemy import Column, Integer
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declared_attr, declarative_base, sessionmaker
-from fastapi.exceptions import HTTPException
 
 from app.core.config import settings
 
@@ -20,18 +21,21 @@ class PreBase:
 
 Base = declarative_base(cls=PreBase)
 
-engine = create_async_engine(settings.database_url)
+engine = create_async_engine(settings.database_url, echo=True)  # отключить эхо
 
 AsyncSessionLocal = sessionmaker(engine, AsyncSession)
 
 
 async def get_async_session():
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise HTTPException(
-                500,
-                detail=UNSUCCESFUL_TRANSACTION
-            )
+        yield session
+# async def get_async_session():
+#     async with AsyncSessionLocal() as session:
+#         try:
+#             yield session
+#         except SQLAlchemyError:
+#             await session.rollback()
+#             raise HTTPException(
+#                 500,
+#                 detail=UNSUCCESFUL_TRANSACTION
+#             )

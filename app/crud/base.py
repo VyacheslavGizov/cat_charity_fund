@@ -1,7 +1,7 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 NOT_FOUND_MESSAGE = '\'{object_name}\' c id={object_id} не найден!'
@@ -11,15 +11,22 @@ class CRUDBase:
     def __init__(self, model):
         self.model = model
 
+    async def save(
+        self,
+        db_object,
+        session: AsyncSession,
+    ):
+        session.add(db_object)
+        await session.commit()
+        await session.refresh(db_object)
+        return db_object
+
     async def create(
             self,
             object_in,
             session: AsyncSession,  # Нужны ли здесь аннотации?
     ):
-        db_object = self.model(**object_in.dict())
-        session.add(db_object)
-        await session.commit()  # Здесь нужно ловить исключение и делать rollback
-        await session.refresh(db_object)
+        db_object = await self.save(self.model(**object_in.dict()), session)
         return db_object
 
     async def get(  # Возможно не нужно
@@ -47,7 +54,7 @@ class CRUDBase:
             )
         return object
 
-    async def get_open(
+    async def get_opens(
             self,
             session: AsyncSession
     ):
@@ -75,9 +82,7 @@ class CRUDBase:
         for field in update_data:
             if field in object_data:
                 setattr(db_object, field, update_data[field])
-        session.add(db_object)
-        await session.commit()  # Здесь нужно ловить исключение и делать rollback
-        await session.refresh(db_object)
+        db_object = await self.save(db_object, session)
         return db_object
 
     async def delete(
@@ -86,18 +91,5 @@ class CRUDBase:
             session: AsyncSession
     ):
         await session.delete(db_object)
-        await session.commit()  # Здесь нужно ловить исключение и делать rollback
+        await session.commit()
         return db_object
-
-    # async def get_by_attr(
-    #         self,
-    #         attr_name: str,
-    #         attr_value,
-    #         session: AsyncSession,
-    # ):
-    #     db_objects = await session.execute(
-    #         select(self.model).where(
-    #             getattr(self.model, attr_name) == attr_value
-    #         )
-    #     )
-    #     return db_objects.scalars().first()

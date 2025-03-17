@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def investment(distributed, destinations, session: AsyncSession):
+async def donations_distribution(distributed, destinations, session: AsyncSession):
     processed_items = [distributed]
     for destination in destinations:
         processed_items.append(destination)
@@ -18,6 +18,6 @@ async def investment(distributed, destinations, session: AsyncSession):
         distributed.close()
         break
     session.add_all(processed_items)
-    await session.commit()  # Здесь делать rollback
+    await session.commit()
     await session.refresh(distributed)
     return distributed
