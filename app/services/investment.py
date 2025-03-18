@@ -19,7 +19,7 @@ async def donations_distribution(
         distributed: ProjectOrDonationType,
         destinations: list[ProjectOrDonationType],
         session: AsyncSession
-):
+) -> ProjectOrDonationType:
     if not destinations:
         return distributed
     processed_items = [distributed]

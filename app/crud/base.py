@@ -1,12 +1,12 @@
-from typing import Optional, Union
+from typing import Optional
 
+from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
-from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User, CharityProject, Donation
+from app.models import User
 
 
 NOT_FOUND_MESSAGE = '\'{object_name}\' c id={object_id} не найден!'
@@ -16,11 +16,7 @@ class CRUDBase:
     def __init__(self, model):
         self.model = model
 
-    async def save(
-        self,
-        db_object,
-        session: AsyncSession,
-    ):
+    async def save(self, db_object, session: AsyncSession):
         session.add(db_object)
         await session.commit()
         await session.refresh(db_object)
@@ -29,9 +25,9 @@ class CRUDBase:
     async def create(
             self,
             object_in,
-            session: AsyncSession,  # Нужны ли здесь аннотации?
+            session: AsyncSession,
             user: Optional[User] = None
-    ) -> Union[CharityProject, Donation]:
+    ):
         object_in_data = object_in.dict()
         if user is not None:
             object_in_data['user_id'] = user.id

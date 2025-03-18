@@ -12,7 +12,7 @@ APP_DECRIPTION = 'Сервис для поддержки котиков!'
 
 class Settings(BaseSettings):
     database_url: str = 'sqlite+aiosqlite:///./fastapi.db'
-    secret: str = 'SECRET'
+    secret: str = 'default_secret'
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
 

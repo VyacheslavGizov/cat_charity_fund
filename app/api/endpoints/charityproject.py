@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends
-from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.charityproject import (
-    CharityProjecDB,
-    CharityProjectCreate,
-    CharityProjectUpdate,
-)
+from app.schemas import (
+    CharityProjecDB, CharityProjectCreate, CharityProjectUpdate)
 from app.core.db import get_async_session
 from app.crud.charityproject import charity_project_crud
 from app.crud.donation import donation_crud

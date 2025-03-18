@@ -1,19 +1,23 @@
 from typing import Optional, Union
 
+
 from fastapi import Depends, Request
 from fastapi_users import (
-    BaseUserManager, FastAPIUsers, IntegerIDMixin, InvalidPasswordException
-)
-from fastapi_users.authentication import (
-    AuthenticationBackend, BearerTransport, JWTStrategy
-)
+    BaseUserManager, FastAPIUsers, IntegerIDMixin, InvalidPasswordException)
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from fastapi_users.authentication import (
+    AuthenticationBackend, BearerTransport, JWTStrategy)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.models.user import User
 from app.schemas.user import UserCreate
+
+
+SHORT_PASSWORD = 'Пароль не должен быть короче 3 символов'
+EMAIL_NOT_PASSWORD = 'Пароль не должен содержать e-mail'
+SUCCESFULL_REGISTER = 'Пользователь {email} зарегистрирован.'
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
@@ -41,18 +45,13 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         user: Union[UserCreate, User],
     ) -> None:
         if len(password) < 3:
-            raise InvalidPasswordException(
-                reason='Password should be at least 3 characters'
-            )
+            raise InvalidPasswordException(reason=SHORT_PASSWORD)
         if user.email in password:
-            raise InvalidPasswordException(
-                reason='Password should not contain e-mail'
-            )
+            raise InvalidPasswordException(reason=EMAIL_NOT_PASSWORD)
 
     async def on_after_register(
-            self, user: User, request: Optional[Request] = None
-    ):
-        print(f'Пользователь {user.email} зарегистрирован.')
+            self, user: User, request: Optional[Request] = None):
+        print(SUCCESFULL_REGISTER.format(email=user.email))
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):

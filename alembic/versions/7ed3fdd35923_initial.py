@@ -1,8 +1,8 @@
-"""Add user relationship to donation
+"""Initial
 
-Revision ID: 8ed3db4d75af
+Revision ID: 7ed3fdd35923
 Revises: 
-Create Date: 2025-03-17 20:43:09.678149
+Create Date: 2025-03-18 22:11:42.509684
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8ed3db4d75af'
+revision = '7ed3fdd35923'
 down_revision = None
 branch_labels = None
 depends_on = None

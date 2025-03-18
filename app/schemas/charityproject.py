@@ -13,14 +13,13 @@ from app.core.config import (
 EMPTY_PROJECT_NAME = 'Имя проекта не может быть пустым!'
 
 
-# Возможжно будет что-то общее для двух схем
 class CharityProjectBase(BaseModel):
     name: Optional[str] = Field(
         None, min_length=MIN_NAME_LENGTH, max_length=MAX_NAME_LENGTH)
     description: Optional[str] = Field(None, min_length=MIN_DESCRIPTION_LENGTH)
     full_amount: Optional[PositiveInt]
 
-    class Config:  # Запрет на передачу в схему неописанных полей
+    class Config:
         extra = Extra.forbid
 
 
@@ -32,7 +31,6 @@ class CharityProjectCreate(CharityProjectBase):
 
 
 class CharityProjectUpdate(CharityProjectBase):
-
     @validator('name')
     def name_cannot_be_empty(cls, value):
         if value is None:

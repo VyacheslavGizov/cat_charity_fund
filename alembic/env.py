@@ -1,6 +1,6 @@
+from logging.config import fileConfig
 import asyncio
 import os
-from logging.config import fileConfig
 
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
@@ -8,7 +8,6 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from alembic import context
-
 from app.core.base import Base
 
 
