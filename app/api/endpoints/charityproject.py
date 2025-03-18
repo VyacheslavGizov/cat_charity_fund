@@ -10,17 +10,15 @@ from app.schemas.charityproject import (
 from app.core.db import get_async_session
 from app.crud.charityproject import charity_project_crud
 from app.crud.donation import donation_crud
-from app.api.validators import check_project_name_duplicate
+from app.api.validators import (
+    check_full_amount_not_less_than_invested,
+    check_project_is_invested,
+    check_project_is_not_fully_invested,
+    check_project_name_duplicate,
+)
 from app.services.investment import donations_distribution
 from app.core.user import current_superuser
 
-
-PROJECT_IS_CLOSED = ('{project} - проект закрыт, редактирование '
-                     'недоступно!')
-WRONG_FULL_AMOUNT = ('Нельзя установить значение full_amount меньше уже '
-                     'вложенной суммы: {invested}.')
-PROJECT_IS_INVESTED_ERROR = ('{project} - были внесены средства, '
-                             'не подлежит удалению!')
 
 router = APIRouter()
 
@@ -35,12 +33,14 @@ async def create_charity_project(
         project: CharityProjectCreate,
         session: AsyncSession = Depends(get_async_session)
 ):
-    """Создаёт благотварительный проект."""
+    """
+    Только для суперюзеров.
+    Создаёт благотварительный проект.
+    """
 
     await check_project_name_duplicate(project.name, session)
-    project = await charity_project_crud.create(project, session)
     project = await donations_distribution(
-        distributed=project,
+        distributed=await charity_project_crud.create(project, session),
         destinations=await donation_crud.get_opens(session),
         session=session
     )
@@ -73,34 +73,26 @@ async def update_project(
         session: AsyncSession = Depends(get_async_session),
 ):
     """
+    Только для суперюзеров.
     Закрытый проект нельзя редактировать;
     нельзя установить требуемую сумму меньше уже вложенной.
     """
-    # Может все валидации перенести в отдельный модуль?
+
     project = await charity_project_crud.get_or_404(project_id, session)
-    if project.fully_invested:
-        raise HTTPException(
-            400,  # Точно ли такой код
-            detail=PROJECT_IS_CLOSED.format(project=project)
-        )
-    update_data = project_data.dict(exclude_unset=True)
-    new_full_amount = update_data.get('full_amount', None)
-    new_name = update_data.get('name', None)
+    check_project_is_not_fully_invested(project)
+    new_name = project_data.name
     if new_name is not None:
         await check_project_name_duplicate(new_name, session)
-    if new_full_amount is None:
-        project = await charity_project_crud.update(
-            project, update_data, session)
-        return project
-    invested_ammount = project.invested_amount
-    if new_full_amount < invested_ammount:
-        raise HTTPException(
-            400,
-            detail=WRONG_FULL_AMOUNT.format(invested=invested_ammount)
-        )
-    if new_full_amount == invested_ammount:
-        project.close()
-    project = await charity_project_crud.update(project, update_data, session)
+    new_full_amount = project_data.full_amount
+    if new_full_amount is not None:
+        check_full_amount_not_less_than_invested(project, new_full_amount)
+        if new_full_amount == project.invested_amount:
+            project.close()
+    project = await charity_project_crud.update(
+        project,
+        update_data=project_data.dict(exclude_unset=True),
+        session=session
+    )
     return project
 
 
@@ -115,16 +107,12 @@ async def delete(
         session: AsyncSession = Depends(get_async_session),
 ):
     """
+    Только для суперюзеров.
     Удаляет проект. Нельзя удалить проект, в который уже были инвестированы
     средства, его можно только закрыть.
     """
 
-    project = await charity_project_crud.get_or_404(project_id, session)
-    if project.invested_amount > 0:
-        raise HTTPException(
-            400,
-            detail=PROJECT_IS_INVESTED_ERROR.format(
-                project=project)
-        )
+    project = check_project_is_invested(
+        await charity_project_crud.get_or_404(project_id, session))
     project = await charity_project_crud.delete(project, session)
     return project

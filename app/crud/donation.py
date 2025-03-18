@@ -9,8 +9,8 @@ from app.models import Donation, User
 
 class CRUDDonation(CRUDBase):
 
+    @staticmethod
     async def get_by_user(
-            self,
             user: User,
             session: AsyncSession,
     ) -> Optional[List[Donation]]:

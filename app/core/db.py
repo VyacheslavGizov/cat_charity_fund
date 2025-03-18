@@ -1,3 +1,4 @@
+from fastapi import status
 from fastapi.exceptions import HTTPException
 from sqlalchemy import Column, Integer
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,7 +8,8 @@ from sqlalchemy.orm import declared_attr, declarative_base, sessionmaker
 from app.core.config import settings
 
 
-UNSUCCESFUL_TRANSACTION = 'Ошибка при выполнении транзакции.'
+UNSUCCESFUL_TRANSACTION = (
+    'Операция не выполнена: ошибка при выполнении транзакции.')
 
 
 class PreBase:
@@ -33,6 +35,6 @@ async def get_async_session():
         except SQLAlchemyError:
             await session.rollback()
             raise HTTPException(
-                500,
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=UNSUCCESFUL_TRANSACTION
             )

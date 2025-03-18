@@ -1,7 +1,27 @@
+from typing import Union
+
+from fastapi import status
+from fastapi.exceptions import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import CharityProject, Donation
 
-async def donations_distribution(distributed, destinations, session: AsyncSession):
+
+UNSUCCESFUL_INVESTMENT = (
+    'Возникла ошибка при распределении средств по проектам.')
+
+
+ProjectOrDonationType = Union[CharityProject, Donation]
+
+
+async def donations_distribution(
+        distributed: ProjectOrDonationType,
+        destinations: list[ProjectOrDonationType],
+        session: AsyncSession
+):
+    if not destinations:
+        return distributed
     processed_items = [distributed]
     for destination in destinations:
         processed_items.append(destination)
@@ -17,7 +37,13 @@ async def donations_distribution(distributed, destinations, session: AsyncSessio
             continue
         distributed.close()
         break
-    session.add_all(processed_items)
-    await session.commit()
+    try:
+        session.add_all(processed_items)
+        await session.commit()
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=UNSUCCESFUL_INVESTMENT
+        )
     await session.refresh(distributed)
     return distributed

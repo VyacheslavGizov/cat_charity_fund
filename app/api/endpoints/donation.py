@@ -26,9 +26,8 @@ async def create_donation(
 ):
     """Сделать пожертвование."""
 
-    donation = await donation_crud.create(donation, session, user)
     donation = await donations_distribution(
-        distributed=donation,
+        distributed=await donation_crud.create(donation, session, user),
         destinations=await charity_project_crud.get_opens(session),
         session=session,
     )
