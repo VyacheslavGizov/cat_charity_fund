@@ -9,14 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User
 
 
-NOT_FOUND_MESSAGE = '\'{object_name}\' c id={object_id} не найден!'
+NOT_FOUND_MESSAGE = '"{object_name}" c id={object_id} не найден!'
 
 
 class CRUDBase:
     def __init__(self, model):
         self.model = model
 
-    async def save(self, db_object, session: AsyncSession):
+    async def save(self, db_object, session: AsyncSession, commit=True):
+        if not commit:
+            return db_object
         session.add(db_object)
         await session.commit()
         await session.refresh(db_object)
@@ -26,12 +28,15 @@ class CRUDBase:
             self,
             object_in,
             session: AsyncSession,
-            user: Optional[User] = None
+            user: Optional[User] = None,
+            commit=True
     ):
         object_in_data = object_in.dict()
+        object_in_data['invested_amount'] = 0
         if user is not None:
             object_in_data['user_id'] = user.id
-        db_object = await self.save(self.model(**object_in_data), session)
+        db_object = await self.save(
+            self.model(**object_in_data), session, commit)
         return db_object
 
     async def get(

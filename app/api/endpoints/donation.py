@@ -5,7 +5,7 @@ from app.core.db import get_async_session
 from app.crud.donation import donation_crud
 from app.crud.charityproject import charity_project_crud
 from app.schemas import DonationCreate, DonationForAdminDB, DonationForUserDB
-from app.services.investment import donations_distribution
+from app.services.investment import investment
 from app.models import User
 from app.core.user import current_user, current_superuser
 
@@ -25,11 +25,14 @@ async def create_donation(
 ):
     """Сделать пожертвование."""
 
-    donation = await donations_distribution(
-        distributed=await donation_crud.create(donation, session, user),
-        destinations=await charity_project_crud.get_opens(session),
-        session=session,
-    )
+    donation = await donation_crud.create(
+        donation, session, user, commit=False)
+    session.add_all(
+        investment(
+            target=donation,
+            sources=await charity_project_crud.get_opens(session)))
+    await session.commit()
+    await session.refresh(donation)
     return donation
 
 

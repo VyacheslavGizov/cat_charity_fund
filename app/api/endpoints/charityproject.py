@@ -12,11 +12,12 @@ from app.api.validators import (
     check_project_is_not_fully_invested,
     check_project_name_duplicate,
 )
-from app.services.investment import donations_distribution
+from app.services.investment import investment
 from app.core.user import current_superuser
 
 
 router = APIRouter()
+
 
 
 @router.post(
@@ -35,11 +36,12 @@ async def create_charity_project(
     """
 
     await check_project_name_duplicate(project.name, session)
-    project = await donations_distribution(
-        distributed=await charity_project_crud.create(project, session),
-        destinations=await donation_crud.get_opens(session),
-        session=session
-    )
+    project = await charity_project_crud.create(project, session, commit=False)
+    session.add_all(
+        investment(
+            target=project, sources=await donation_crud.get_opens(session)))
+    await session.commit()
+    await session.refresh(project)
     return project
 
 
