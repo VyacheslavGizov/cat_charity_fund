@@ -15,10 +15,11 @@ PROJECT_IS_INVESTED_ERROR = (
 
 async def check_project_name_duplicate(
         name: str,
-        session: AsyncSession
+        session: AsyncSession,
+        permitted_id=None
 ) -> None:
     project_id = await charity_project_crud.get_id_by_name(name, session)
-    if project_id is not None:
+    if project_id and permitted_id != project_id:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail=NONUNIQUE_PROJECT_NAME.format(name=name))
@@ -33,7 +34,7 @@ def check_project_is_not_fully_invested(project):
 
 def check_full_amount_not_less_than_invested(project, full_amount):
     invested_amount = project.invested_amount
-    if full_amount < project.invested_amount:
+    if full_amount < invested_amount:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail=WRONG_FULL_AMOUNT.format(invested=invested_amount))

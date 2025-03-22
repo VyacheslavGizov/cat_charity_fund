@@ -14,10 +14,10 @@ class CRUDDonation(CRUDBase):
             user: User,
             session: AsyncSession,
     ) -> Optional[List[Donation]]:
-        user_donations = await session.execute(
-            select(Donation).where(Donation.user_id == user.id)
-        )
-        return user_donations.scalars().all()
+        return (
+            await session.execute(
+                select(Donation).where(Donation.user_id == user.id))
+        ).scalars().all()
 
 
 donation_crud = CRUDDonation(Donation)

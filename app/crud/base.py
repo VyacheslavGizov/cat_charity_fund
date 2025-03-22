@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TypeVar
 
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
@@ -23,6 +23,10 @@ class CRUDBase:
         await session.commit()
         await session.refresh(db_object)
         return db_object
+
+    async def save_all(self, db_objects, session: AsyncSession):
+        session.add_all(db_objects)
+        await session.commit()
 
     async def create(
             self,
@@ -89,8 +93,8 @@ class CRUDBase:
             session: AsyncSession,
     ):
         object_data = jsonable_encoder(db_object)
-        for field in update_data:
-            if field in object_data:
+        for field in object_data:
+            if field in update_data:
                 setattr(db_object, field, update_data[field])
         db_object = await self.save(db_object, session)
         return db_object

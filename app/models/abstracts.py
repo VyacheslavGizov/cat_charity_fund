@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Integer
 
 from app.core.db import Base
 
@@ -14,11 +14,20 @@ class InvestInfoAndDatesAbstractModel(Base):
     create_date = Column(DateTime, default=datetime.now)
     close_date = Column(DateTime)
 
-    @property
-    def remainder(self):
-        return self.full_amount - self.invested_amount
+    __table_args__ = (
+        CheckConstraint('full_amount > 0', name='positive full_amount'),
+        CheckConstraint(
+            'full_amount - invested_amount >= 0',
+            name='invested_amount gte 0 and lte full_amount'),
+    )
 
-    def close(self):
-        self.invested_amount = self.full_amount
-        self.fully_invested = True
-        self.close_date = datetime.now()
+    def __repr__(self):
+        return (
+            f'{self.__class__.__name__}: '
+            f'id={self.id}, '
+            f'full_amount={self.full_amount}, '
+            f'invested_amount={self.invested_amount}, '
+            f'fully_invested={self.fully_invested}, '
+            f'create_date={self.create_date}, '
+            f'close_date={self.close_date}'
+        )

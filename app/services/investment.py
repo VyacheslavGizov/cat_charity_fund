@@ -1,32 +1,38 @@
-from typing import Union
+from typing import TypeVar
+from datetime import datetime
 
-from fastapi import status
-from fastapi.exceptions import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
 
 
-ProjectOrDonationType = Union[CharityProject, Donation]
-
-
-def investment(target, sources):  # Аннотации потом
+def donations_distribution(target, sources):  # Аннотации потом
     changeds = [target]
-    if not sources:
-        return changeds
     for source in sources:
         changeds.append(source)
-        target_remainder = target.remainder
-        source_remainder = source.remainder
+        target_remainder = get_remainder(target)
+        source_remainder = get_remainder(source)
         if target_remainder < source_remainder:
-            source.invested_amount += target_remainder
-            target.close()
+            investment(target, source, amount=target_remainder)
+            close_investment_object(target)
             break
-        source.close()
+        investment(target, source, amount=source_remainder)
+        close_investment_object(source)
         if target_remainder > source_remainder:
-            target.invested_amount += source_remainder
             continue
-        target.close()
+        close_investment_object(target)
         break
     return changeds
+
+
+def get_remainder(object):
+    return object.full_amount - object.invested_amount
+
+
+def investment(target, source, amount):
+    target.invested_amount += amount
+    source.invested_amount += amount
+
+
+def close_investment_object(object):
+    object.fully_invested = True
+    object.close_date = datetime.now()

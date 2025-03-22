@@ -4,10 +4,16 @@ from .abstracts import InvestInfoAndDatesAbstractModel
 from app.core.config import MAX_NAME_LENGTH
 
 
+MAX_DESCRIPTION_LEN = 50
+
+
 class CharityProject(InvestInfoAndDatesAbstractModel):
     name = Column(String(MAX_NAME_LENGTH), unique=True, nullable=False)
     description = Column(Text, nullable=False)
 
-    def __str__(self):
-        return (f'{self.name}: собрано {self.invested_amount} '
-                f'из {self.full_amount}')
+    def __repr__(self):
+        return (
+            f'<{super().__repr__()}, '
+            f'name={self.name}, '
+            f'description={self.description[:MAX_DESCRIPTION_LEN]}>'
+        )

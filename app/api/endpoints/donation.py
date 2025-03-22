@@ -5,7 +5,7 @@ from app.core.db import get_async_session
 from app.crud.donation import donation_crud
 from app.crud.charityproject import charity_project_crud
 from app.schemas import DonationCreate, DonationForAdminDB, DonationForUserDB
-from app.services.investment import investment
+from app.services.investment import donations_distribution
 from app.models import User
 from app.core.user import current_user, current_superuser
 
@@ -27,11 +27,12 @@ async def create_donation(
 
     donation = await donation_crud.create(
         donation, session, user, commit=False)
-    session.add_all(
-        investment(
-            target=donation,
-            sources=await charity_project_crud.get_opens(session)))
-    await session.commit()
+    open_projects = await charity_project_crud.get_opens(session)
+    if not open_projects:
+        return await donation_crud.save(donation, session)
+    await donation_crud.save_all(
+        donations_distribution(
+            target=donation, sources=open_projects), session)
     await session.refresh(donation)
     return donation
 
@@ -50,8 +51,7 @@ async def get_all_donations(
     Возвращает список всех пожертвований.
     """
 
-    donations = await donation_crud.get_all(session)
-    return donations
+    return await donation_crud.get_all(session)
 
 
 @router.get(
@@ -66,5 +66,4 @@ async def get_user_donations(
 ):
     """Вернуть список пожертвований пользователя, выполняющего запрос."""
 
-    donations = await donation_crud.get_by_user(user, session)
-    return donations
+    return await donation_crud.get_by_user(user, session)
