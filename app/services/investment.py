@@ -1,11 +1,16 @@
-from typing import TypeVar
 from datetime import datetime
+from typing import TypeVar
+
+from app.models.abstracts import InvestInfoAndDatesAbstractModel
 
 
-from app.models import CharityProject, Donation
+ModelType = TypeVar('ModelType', bound=InvestInfoAndDatesAbstractModel)
 
 
-def donations_distribution(target, sources):  # Аннотации потом
+def donations_distribution(
+        target: ModelType,
+        sources: list[ModelType]
+) -> list[ModelType]:
     changeds = [target]
     for source in sources:
         changeds.append(source)
@@ -24,15 +29,15 @@ def donations_distribution(target, sources):  # Аннотации потом
     return changeds
 
 
-def get_remainder(object):
+def get_remainder(object: ModelType):
     return object.full_amount - object.invested_amount
 
 
-def investment(target, source, amount):
+def investment(target: ModelType, source: ModelType, amount: int):
     target.invested_amount += amount
     source.invested_amount += amount
 
 
-def close_investment_object(object):
+def close_investment_object(object: ModelType):
     object.fully_invested = True
     object.close_date = datetime.now()

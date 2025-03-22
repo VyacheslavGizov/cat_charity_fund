@@ -1,4 +1,4 @@
-from typing import Optional, TypeVar
+from typing import Optional
 
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
@@ -39,18 +39,18 @@ class CRUDBase:
         object_in_data['invested_amount'] = 0
         if user is not None:
             object_in_data['user_id'] = user.id
-        db_object = await self.save(
+        return await self.save(
             self.model(**object_in_data), session, commit)
-        return db_object
 
     async def get(
             self,
             object_id: int,
             session: AsyncSession,
     ):
-        objects = await session.execute(
-            select(self.model).where(self.model.id == object_id))
-        return objects.scalars().first()
+        return (
+            await session.execute(
+                select(self.model).where(self.model.id == object_id))
+        ).scalars().first()
 
     async def get_or_404(
             self,
@@ -72,19 +72,18 @@ class CRUDBase:
             self,
             session: AsyncSession
     ):
-        objects = await session.execute(
-            select(self.model).where(
-                self.model.fully_invested == 0
-            ).order_by(self.model.create_date)
-        )
-        return objects.scalars().all()
+        return (
+            await session.execute(
+                select(self.model).where(
+                    self.model.fully_invested == 0).order_by(
+                        self.model.create_date))
+        ).scalars().all()
 
     async def get_all(
             self,
             session: AsyncSession,
     ):
-        db_objects = await session.execute(select(self.model))
-        return db_objects.scalars().all()
+        return (await session.execute(select(self.model))).scalars().all()
 
     async def update(
             self,
@@ -96,8 +95,7 @@ class CRUDBase:
         for field in object_data:
             if field in update_data:
                 setattr(db_object, field, update_data[field])
-        db_object = await self.save(db_object, session)
-        return db_object
+        return await self.save(db_object, session)
 
     async def delete(
             self,
