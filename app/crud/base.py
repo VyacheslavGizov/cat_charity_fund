@@ -17,7 +17,6 @@ class CRUDBase:
         self.model = model
 
     async def save(self, db_object, session: AsyncSession):
-        session.add(db_object)
         await session.commit()
         await session.refresh(db_object)
         return db_object
@@ -34,9 +33,9 @@ class CRUDBase:
         if user is not None:
             object_in_data['user_id'] = user.id
         db_object = self.model(**object_in_data)
+        session.add(db_object)
         if commit:
             return await self.save(db_object, session)
-        session.add(db_object)
         return db_object
 
     async def get(
