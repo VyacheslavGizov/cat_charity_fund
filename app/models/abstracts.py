@@ -17,7 +17,7 @@ class InvestInfoAndDatesAbstractModel(Base):
     __table_args__ = (
         CheckConstraint('full_amount > 0', name='positive full_amount'),
         CheckConstraint(
-            'full_amount >= invested_amount >= 0',
+            '0 <= invested_amount <= full_amount',
             name='invested_amount gte 0 and lte full_amount'),
     )
 

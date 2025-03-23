@@ -36,6 +36,7 @@ class CRUDBase:
         db_object = self.model(**object_in_data)
         if commit:
             return await self.save(db_object, session)
+        session.add(db_object)
         return db_object
 
     async def get(

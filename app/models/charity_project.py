@@ -15,5 +15,5 @@ class CharityProject(InvestInfoAndDatesAbstractModel):
         return (
             f'{super().__repr__()}, '
             f'{self.name=}, '
-            f'self.description={self.description[:MAX_DESCRIPTION_LEN]}'
+            f'{self.description[:MAX_DESCRIPTION_LEN]=}'
         )
