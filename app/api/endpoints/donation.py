@@ -28,11 +28,9 @@ async def create_donation(
     donation = await donation_crud.create(
         donation, session, user, commit=False)
     open_projects = await charity_project_crud.get_opens(session)
-    if not open_projects:
-        return await donation_crud.save(donation, session)
-    await donation_crud.save_all(
-        donations_distribution(
-            target=donation, sources=open_projects), session)
+    session.add_all(
+        donations_distribution(target=donation, sources=open_projects))
+    await session.commit()
     await session.refresh(donation)
     return donation
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,8 +15,7 @@ from app.crud.charityproject import charity_project_crud
 from app.crud.donation import donation_crud
 from app.schemas import (
     CharityProjecDB, CharityProjectCreate, CharityProjectUpdate)
-from app.services.investment import (
-    close_investment_object, donations_distribution)
+from app.services.investment import donations_distribution
 
 
 router = APIRouter()
@@ -38,11 +39,9 @@ async def create_charity_project(
     await check_project_name_duplicate(project.name, session)
     project = await charity_project_crud.create(project, session, commit=False)
     open_donations = await donation_crud.get_opens(session)
-    if not open_donations:
-        return await charity_project_crud.save(project, session)
-    await charity_project_crud.save_all(
-        donations_distribution(
-            target=project, sources=open_donations), session)
+    session.add_all(
+        donations_distribution(target=project, sources=open_donations))
+    await session.commit()
     await session.refresh(project)
     return project
 
@@ -87,7 +86,8 @@ async def update_project(
     if new_full_amount is not None:
         check_full_amount_not_less_than_invested(project, new_full_amount)
         if new_full_amount == project.invested_amount:
-            close_investment_object(project)
+            project.fully_invested = True
+            project.close_date = datetime.now()
     return await charity_project_crud.update(
         project,
         update_data=project_data.dict(exclude_unset=True),

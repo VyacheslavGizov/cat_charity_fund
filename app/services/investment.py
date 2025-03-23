@@ -1,43 +1,21 @@
 from datetime import datetime
-from typing import TypeVar
-
-from app.models.abstracts import InvestInfoAndDatesAbstractModel
 
 
-ModelType = TypeVar('ModelType', bound=InvestInfoAndDatesAbstractModel)
-
-
-def donations_distribution(
-        target: ModelType,
-        sources: list[ModelType]
-) -> list[ModelType]:
-    changeds = [target]
+def donations_distribution(target, sources):
+    changeds = []
     for source in sources:
+        target_remainder = target.full_amount - target.invested_amount
+        source_remainder = source.full_amount - source.invested_amount
+        invested_amount = (
+            source_remainder if target_remainder > source_remainder
+            else target_remainder)
+        for item in [target, source]:
+            item.invested_amount += invested_amount
+            if item.invested_amount == item.full_amount:
+                item.fully_invested = True
+                item.close_date = datetime.now()
         changeds.append(source)
-        target_remainder = get_remainder(target)
-        source_remainder = get_remainder(source)
-        if target_remainder < source_remainder:
-            investment(target, source, amount=target_remainder)
-            close_investment_object(target)
+        if target.fully_invested:
             break
-        investment(target, source, amount=source_remainder)
-        close_investment_object(source)
-        if target_remainder > source_remainder:
-            continue
-        close_investment_object(target)
-        break
+    changeds.append(target)
     return changeds
-
-
-def get_remainder(object: ModelType):
-    return object.full_amount - object.invested_amount
-
-
-def investment(target: ModelType, source: ModelType, amount: int):
-    target.invested_amount += amount
-    source.invested_amount += amount
-
-
-def close_investment_object(object: ModelType):
-    object.fully_invested = True
-    object.close_date = datetime.now()

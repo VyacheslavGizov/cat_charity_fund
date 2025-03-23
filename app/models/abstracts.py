@@ -17,17 +17,17 @@ class InvestInfoAndDatesAbstractModel(Base):
     __table_args__ = (
         CheckConstraint('full_amount > 0', name='positive full_amount'),
         CheckConstraint(
-            'full_amount - invested_amount >= 0',
+            'full_amount >= invested_amount >= 0',
             name='invested_amount gte 0 and lte full_amount'),
     )
 
     def __repr__(self):
         return (
-            f'{self.__class__.__name__}: '
-            f'id={self.id}, '
-            f'full_amount={self.full_amount}, '
-            f'invested_amount={self.invested_amount}, '
-            f'fully_invested={self.fully_invested}, '
-            f'create_date={self.create_date}, '
-            f'close_date={self.close_date}'
+            f'{type(self).__name__}: '
+            f'{self.id=}, '
+            f'{self.full_amount=}, '
+            f'{self.invested_amount=}, '
+            f'{self.fully_invested=}, '
+            f'{self.create_date=}, '
+            f'{self.close_date=}'
         )

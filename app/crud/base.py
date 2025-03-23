@@ -16,17 +16,11 @@ class CRUDBase:
     def __init__(self, model):
         self.model = model
 
-    async def save(self, db_object, session: AsyncSession, commit=True):
-        if not commit:
-            return db_object
+    async def save(self, db_object, session: AsyncSession):
         session.add(db_object)
         await session.commit()
         await session.refresh(db_object)
         return db_object
-
-    async def save_all(self, db_objects, session: AsyncSession):
-        session.add_all(db_objects)
-        await session.commit()
 
     async def create(
             self,
@@ -39,8 +33,10 @@ class CRUDBase:
         object_in_data['invested_amount'] = 0
         if user is not None:
             object_in_data['user_id'] = user.id
-        return await self.save(
-            self.model(**object_in_data), session, commit)
+        db_object = self.model(**object_in_data)
+        if commit:
+            return await self.save(db_object, session)
+        return db_object
 
     async def get(
             self,

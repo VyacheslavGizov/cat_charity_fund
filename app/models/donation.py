@@ -16,7 +16,7 @@ class Donation(InvestInfoAndDatesAbstractModel):
     def __repr__(self):
         comment = self.comment[:MAX_COMMENT_LEN] if self.comment else None
         return (
-            f'<{super().__repr__()}, '
-            f'user_id={self.user_id}, '
-            f'comment={comment}>'
+            f'{super().__repr__()}, '
+            f'{self.user_id=}, '
+            f'self.comment={comment}'
         )
